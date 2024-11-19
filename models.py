@@ -12,3 +12,9 @@ class Cours(SQLModel, table=True):
     horaire: DateTime
     capacite_max: Integer
     coach_id: Integer = Field(default=None, foreign_key="coachs.id")
+
+class Membre(SQLModel, table=True):
+    id:int | None = Field(default=None, primary_key=True)
+    nom:str
+    email:str
+    carte_acces_id:int
