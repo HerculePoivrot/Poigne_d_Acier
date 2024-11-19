@@ -18,3 +18,13 @@ class Membre(SQLModel, table=True):
     nom:str
     email:str
     carte_acces_id:int
+
+class Inscriptions(SQLModel, table=True):
+    id:int
+    membre_id:int
+    cours_id:int
+    date_inscription:DateTime
+
+class CarteAcces(SQLModel, table=True):
+    id:int
+    numero_unique:int
