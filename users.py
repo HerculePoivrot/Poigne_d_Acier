@@ -22,9 +22,6 @@ class CarteMembre:
         self.unique_id = unique_id
     def get_unique_id(self):
         return self.unique_id
-class InsciptionMembre:
-    def __init__(self):
-        
 
 def input_users():
     # Crée un formulaire avec un bouton de soumission
