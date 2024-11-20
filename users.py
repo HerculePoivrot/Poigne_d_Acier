@@ -135,6 +135,30 @@ def disconnect_user():
         st.rerun()
 
 
+def panel_update_user():
+    session = st.session_state
+    if "carte_membre" in session and "membre_inscription" in session:
+        if session.state_connection is True:
+            st.write(
+                f"Connecté en tant que : {session.membre_inscription.name}")
+            name = st.text_input(label="Name",
+                                 value=f"{session.membre_inscription.name}",
+                                 key=f"panel_update_user_name\
+                                 {session.membre_inscription.name}_\
+                                 {session.carte_membre.unique_id}")
+            mail = st.text_input(label="Mail",
+                                 value=f"{session.membre_inscription.mail}",
+                                 key=f"panel_update_user_mail\
+                                 {session.membre_inscription.name}_\
+                                 {session.carte_membre.unique_id}")
+            if st.button("update_user"):
+                if name not in [None, ""] and mail not in [None, ""]:
+                    st.session_state.membre_inscription.name = name
+                    st.session_state.membre_inscription.mail = mail
+    else:
+        st.error("pas possible de modifier car pas instancier")
+
+
 def panel_user():
     session = st.session_state
     if "carte_membre" in session and "membre_inscription" in session:

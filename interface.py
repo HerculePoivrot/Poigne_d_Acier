@@ -1,6 +1,6 @@
 import streamlit as st
 
-from users import create_user, panel_user
+from users import create_user, panel_user, panel_update_user
 from admin_panel import admin_pannel
 
 
@@ -39,10 +39,22 @@ def interface_member():
 # --- Interface Connexion ---
 def interface_connection():
     panel_user()
+    if "state_connection" in st.session_state:
+        if st.session_state.state_connection is True:
+            if st.button("Edit User"):
+                switch_interface("panel_update_user")
     if st.button("Pas encore inscrit ? Inscrivez-vous"):
         switch_interface("register_member")
     if st.button("Retour à l'Accueil"):
         switch_interface("default")
+
+
+def interface_update_user():
+    if st.session_state.state_connection is False:
+        switch_interface("connect_member")
+    if st.button("Retour à l'Accueil"):
+        switch_interface("default")
+    panel_update_user()
 
 
 # --- Interface Accueil ---
@@ -69,6 +81,8 @@ def interface():
         interface_register()
     elif focus == "connect_member":
         interface_connection()
+    elif focus == "panel_update_user":
+        interface_update_user()
     elif focus == "admin":
         interface_admin()
 
