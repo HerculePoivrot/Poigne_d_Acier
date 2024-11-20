@@ -1,6 +1,6 @@
 import streamlit as st
 
-from users import create_user, connect_user
+from users import create_user, panel_user
 from admin_panel import admin_pannel
 
 
@@ -38,7 +38,7 @@ def interface_member():
 
 # --- Interface Connexion ---
 def interface_connection():
-    connect_user()
+    panel_user()
     if st.button("Pas encore inscrit ? Inscrivez-vous"):
         switch_interface("register_member")
     if st.button("Retour à l'Accueil"):
