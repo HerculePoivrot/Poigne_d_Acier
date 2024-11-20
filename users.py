@@ -160,6 +160,8 @@ def panel_update_user():
 
 
 def panel_user():
+    if "state_connection" not in st.session_state:
+        st.session_state.state_connection = False
     session = st.session_state
     if "carte_membre" in session and "membre_inscription" in session:
         if session.state_connection is True:

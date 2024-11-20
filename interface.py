@@ -54,6 +54,8 @@ def interface_update_user():
         switch_interface("connect_member")
     if st.button("Retour à l'Accueil"):
         switch_interface("default")
+    if st.button("Retour aux profils"):
+        switch_interface("connect_member")
     panel_update_user()
 
 
