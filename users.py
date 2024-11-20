@@ -1,104 +1,177 @@
-import streamlit as st
 import random
+import streamlit as st
 
 
 class MembresInscription:
     def __init__(self, name: str, mail: str):
-        self.name = name  # Utilise les valeurs passées en argument
-        self.mail = mail
+        self._name = name
+        self._mail = mail
 
-    def get_name(self):
-        return self.name
+    @property
+    def name(self):
+        return self._name
 
-    def get_mail(self):
-        return self.mail
+    @property
+    def mail(self):
+        return self._mail
 
     def generate_card_id(self):
-        unique_id = ""
-        len_name = len(self.name)
-        len_mail = len(self.mail)
-        for i in range(len_name * len_mail):
-            id_choice_phase = random.choice([self.name, self.mail])
-            unique_id += str(ord(random.choice(id_choice_phase)))
-        print(unique_id)
+        """
+        Génère un ID unique basé sur le nom et l'adresse mail.
+        Utilise les codes ASCII des caractères de manière aléatoire.
+        """
+        unique_id = "".join(
+            str(ord(random.choice(self._name + self._mail)))
+            for _ in range(len(self._name) * len(self._mail))
+        )
         return int(unique_id)
+
+    def __str__(self):
+        return f"Membre: {self._name} ({self._mail})"
 
 
 class CarteMembre:
-    def __init__(self, unique_id):
-        self.unique_id = unique_id
+    def __init__(self, unique_id: int):
+        self._unique_id = unique_id
 
-    def get_unique_id(self):
-        return self.unique_id
+    @property
+    def unique_id(self):
+        return self._unique_id
+
+    def __str__(self):
+        return f"Carte ID: {self._unique_id}"
 
 
 def input_users():
-    # Crée un formulaire avec un bouton de soumission
-    with st.form("add_question_form", clear_on_submit=True):
-        name = st.text_input(label="Name",
-                             placeholder="Jean Dupont", key="name_user")
-        mail = st.text_input(label="Mail",
-                             placeholder="toto@gmail.com")
-        submit = st.form_submit_button("Submit")
+    """
+    Formulaire pour saisir le nom et le mail d'un utilisateur.
+    """
+    with st.form("add_user_form", clear_on_submit=True):
+        name = st.text_input(label="Nom", placeholder="Jean Dupont", key="name_user")
+        mail = st.text_input(label="Email", placeholder="jean.dupont@gmail.com")
+        submit = st.form_submit_button("Valider")
+
         if submit:
-            # Crée une instance avec les valeurs saisies
-            membre = MembresInscription(name, mail)
-            # Stocke dans la session pour réutilisation
-            st.session_state.membre_inscription = membre
-            st.write(f"\
-                Membre ajouté : {membre.get_name()} \
-                    ({membre.get_mail()})")  # Affiche le membre ajouté
+            if name and mail:
+                membre = MembresInscription(name, mail)
+                st.session_state.membre_inscription = membre
+                st.success(f"Inscription réussie : {membre}")
+            else:
+                st.error("Veuillez remplir tous les champs.")
+
+
+import random
+import streamlit as st
+
+
+class MembresInscription:
+    def __init__(self, name: str, mail: str):
+        self._name = name
+        self._mail = mail
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def mail(self):
+        return self._mail
+
+    def generate_card_id(self):
+        """
+        Génère un ID unique basé sur le nom et l'adresse email.
+        """
+        unique_id = "".join(
+            str(ord(random.choice(self._name + self._mail)))
+            for _ in range(len(self._name) * len(self._mail))
+        )
+        return int(unique_id)
+
+    def __str__(self):
+        return f"Membre: {self._name} ({self._mail})"
+
+
+class CarteMembre:
+    def __init__(self, unique_id: int):
+        self._unique_id = unique_id
+
+    @property
+    def unique_id(self):
+        return self._unique_id
+
+    def __str__(self):
+        return f"Carte ID: {self._unique_id}"
 
 
 def create_user():
-    if "membre_inscription" not in st.session_state:
-        st.session_state.membre_inscription = None
-    input_users()
-    if st.session_state.membre_inscription is not None:
-        if "carte_membre" not in st.session_state:
-            st.session_state.carte_membre = None
-        unique_id = st.session_state.membre_inscription.generate_card_id()
-        st.session_state.carte_membre = CarteMembre(unique_id)
-        if type(st.session_state.carte_membre) is CarteMembre:
-            st.write(f"{st.session_state.carte_membre.get_unique_id()=}")
+    """
+    Page d'inscription : Saisie du nom et de l'email, et génération d'une carte membre.
+    """
+    with st.form("form_register", clear_on_submit=True):
+        name = st.text_input(label="Nom", placeholder="Jean Dupont")
+        mail = st.text_input(label="Email", placeholder="jean.dupont@gmail.com")
+        submit = st.form_submit_button("S'inscrire")
+
+        if submit:
+            if name and mail:
+                membre = MembresInscription(name, mail)
+                st.session_state.membre_inscription = membre
+                unique_id = membre.generate_card_id()
+                st.session_state.carte_membre = CarteMembre(unique_id)
+
+                st.success(f"Inscription réussie ! Voici votre numéro de carte : {unique_id}")
+            else:
+                st.error("Veuillez remplir tous les champs.")
 
 
 def connect_user():
-    input_card = st.text_input(label="IdUser:")
+    """
+    Page de connexion : Saisie de l'ID de carte membre pour se connecter.
+    """
+    input_card = st.text_input(label="Numéro de carte membre", placeholder="Entrez votre ID unique")
     session = st.session_state
-    if st.button("Connection"):
-        if int(input_card) == session.carte_membre.get_unique_id():
-            st.write("Connection Success")
-            st.session_state.state_connection = True
-            st.rerun()
+
+    if st.button("Se connecter"):
+        if "carte_membre" in session and session.carte_membre:
+            try:
+                if int(input_card) == session.carte_membre.unique_id:
+                    st.success(f"Bienvenue, {session.membre_inscription.name} !")
+                    session.state_connection = True
+                    st.rerun()
+                else:
+                    st.error("ID incorrect. Veuillez réessayer.")
+            except ValueError:
+                st.error("Veuillez entrer un numéro valide.")
         else:
-            st.write(f"{st.session_state.carte_membre.get_unique_id()=}")
-            st.write(f"{int(input_card)=}")
-            st.write("Connection Failed")
-            st.session_state.state_connection = False
+            st.error("Aucune carte membre trouvée. Inscrivez-vous d'abord.")
 
 
 def disconnect_user():
+    """
+    Permet à l'utilisateur de se déconnecter.
+    """
     if st.button("Déconnexion"):
-        st.session_state.state_connection = False
+        st.session_state.state_connection is False
+        st.success("Déconnexion réussie.")
         st.rerun()
 
 
 def start_member():
+    """
+    Gestion principale des utilisateurs : inscription, connexion, ou déconnexion.
+    """
     session = st.session_state
+
     if "state_connection" not in session:
-        st.session_state.state_connection = False
-    st.title("Users:")
+        session.state_connection = False
+
+    st.title("Espace Membre")
+
     if "carte_membre" in session and "membre_inscription" in session:
-        if session.state_connection is True:
-            st.write("Je suis en état connecté")
+        if session.state_connection:
+            st.write(f"Connecté en tant que : {session.membre_inscription.name}")
             disconnect_user()
         else:
             connect_user()
-            st.write("Je ne suis pas en état connecté")
     else:
         create_user()
-
-
-if __name__ == "__main__":
-    start_member()
