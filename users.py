@@ -26,7 +26,7 @@ class CarteMembre:
 def input_users():
     # Crée un formulaire avec un bouton de soumission
     with st.form("add_question_form", clear_on_submit=True):
-        name = st.text_input(label="Name", placeholder="Jean Dupont")
+        name = st.text_input(label="Name", placeholder="Jean Dupont", key = "name_user")
         mail = st.text_input(label="Mail", placeholder="toto@gmail.com")  # Retirer type="email"
         submit = st.form_submit_button("Submit")  # Bouton de soumission
         if submit:
@@ -63,19 +63,20 @@ def disconnect_user():
     if st.button("Déconnexion"):
         st.session_state.state_connection = False
         st.rerun()
-    
+def start_member():
+        if "state_connection" not in st.session_state:
+            st.session_state.state_connection = False
+        st.title("Users:")
+        if "carte_membre" in st.session_state and "membre_inscription" in st.session_state:
+            
+            if st.session_state.state_connection == True:
+                st.write("Je suis en état connecté")
+                disconnect_user()
+            else:
+                connect_user()
+                st.write("Je ne suis pas en état connecté")
+        else:
+            create_user()
 
 if __name__ == "__main__":
-    if "state_connection" not in st.session_state:
-        st.session_state.state_connection = False
-    st.title("Users:")
-    if "carte_membre" in st.session_state and "membre_inscription" in st.session_state:
-        
-        if st.session_state.state_connection == True:
-            st.write("Je suis en état connecté")
-            disconnect_user()
-        else:
-            connect_user()
-            st.write("Je ne suis pas en état connecté")
-    else:
-        create_user()
+    start_member()
