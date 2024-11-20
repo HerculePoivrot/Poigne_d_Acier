@@ -2,18 +2,30 @@ import random
 import streamlit as st
 
 
-class MembresInscription:
+class PathernMembre:
     def __init__(self, name: str, mail: str):
         self._name = name
         self._mail = mail
 
+    # Getter pour name
     @property
     def name(self):
         return self._name
 
+    # Setter pour name
+    @name.setter
+    def name(self, new_name: str):
+        self._name = new_name
+
+    # Getter pour mail
     @property
     def mail(self):
         return self._mail
+
+    # Setter pour mail
+    @mail.setter
+    def mail(self, new_mail: str):
+        self._mail = new_mail
 
     def generate_card_id(self):
         """
@@ -30,7 +42,7 @@ class MembresInscription:
         return f"Membre: {self._name} ({self._mail})"
 
 
-class CarteMembre:
+class PathernCarteAcces:
     def __init__(self, unique_id: int):
         self._unique_id = unique_id
 
@@ -56,7 +68,7 @@ def input_users():
 
         if submit:
             if name and mail:
-                membre = MembresInscription(name, mail)
+                membre = PathernMembre(name, mail)
                 st.session_state.membre_inscription = membre
                 st.success(f"Inscription réussie : {membre}")
             else:
@@ -77,10 +89,10 @@ def create_user():
 
         if submit:
             if name and mail:
-                membre = MembresInscription(name, mail)
+                membre = PathernMembre(name, mail)
                 st.session_state.membre_inscription = membre
                 unique_id = membre.generate_card_id()
-                st.session_state.carte_membre = CarteMembre(unique_id)
+                st.session_state.carte_membre = PathernCarteAcces(unique_id)
 
                 st.success(
                     f"Inscription réussie ! Voici votre numéro de carte : \
