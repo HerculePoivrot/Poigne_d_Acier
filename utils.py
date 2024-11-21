@@ -1,5 +1,6 @@
 from sqlmodel import Session, select
 from init_db import engine
+from models import Membres
 
 def add_instance(instance_object:object):
     with Session(engine) as sessionsql:
@@ -21,3 +22,13 @@ def del_instance(instance_object:object, id):
         sessionsql.delete(focus_object)
         sessionsql.commit()
 
+def select_table(table_focus:object):
+    with Session(engine) as sessionsql:
+        statement = select(table_focus)
+        results = sessionsql.exec(statement)
+        return results.all()
+
+
+if __name__ == "__main__":
+    for membre in select_table(Membres):
+        print(membre.email)
