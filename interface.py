@@ -74,19 +74,16 @@ def interface():
         st.session_state.focus_interface = "default"
 
     focus = st.session_state.focus_interface
-
-    if focus == "default":
-        interface_acceuil()
-    elif focus == "member":
-        interface_member()
-    elif focus == "register_member":
-        interface_register()
-    elif focus == "connect_member":
-        interface_connection()
-    elif focus == "panel_update_user":
-        interface_update_user()
-    elif focus == "admin":
-        interface_admin()
+    interface_choice = {
+                        "default":interface_acceuil,
+                        "member":interface_member,
+                        "register_member":interface_register,
+                        "connect_member":interface_connection,
+                        "panel_update_user":interface_update_user,
+                        "admin":interface_admin
+                        }
+    if focus  in interface_choice:
+        interface_choice[focus]()
 
 
 if __name__ == "__main__":
