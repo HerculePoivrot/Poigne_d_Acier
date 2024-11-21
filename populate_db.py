@@ -12,7 +12,7 @@ def populate_data():
     with Session(engine) as session:
         cartes = []  #Initialisation d'une liste vide
         for _ in range(l_range):
-            carte = CarteAcces(numero_unique=fake.unique.numerify(text='%%%%%%%%%%'))
+            carte = CarteAcces(numero_unique=fake.unique.numerify(text='CARD%%%%%%%%%%'))
             session.add(carte)
             cartes.append(carte)
         session.commit()
@@ -32,8 +32,8 @@ def populate_data():
         l_specialite = ["Yoga", "Pump", "Pilates", "Musculation", "Boxe"]
         for _ in range(l_range):
             coach = Coachs(nom = fake.name_nonbinary(),
-                           specialite = rd.choice(l_specialite),
-                           cours = single_cours.id
+                           specialite = rd.choice(l_specialite)
+                           #cours = single_cours.id
                            )
             session.add(coach)
             coachs.append(coach)
