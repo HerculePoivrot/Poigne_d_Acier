@@ -1,9 +1,10 @@
 import random
 import streamlit as st
 from models import Membres, CarteAcces
-from utils import add_instance, select_table, get_last_instance, del_instance
+from utils import add_instance, select_table, get_last_instance
 from sqlmodel import select, Session
 from init_db import engine
+
 
 class PathernMembre:
     def __init__(self, name: str, mail: str):
@@ -106,12 +107,15 @@ def create_user():
                 add_instance(carte_access_sql)
                 last_carte_access = get_last_instance(CarteAcces)
                 st.write(last_carte_access)
-                membre_sql = Membres(nom=membre.name, email=membre.name, carte_acces_id=last_carte_access.id)
+                membre_sql = Membres(nom=membre.name,
+                                     email=membre.mail,
+                                     carte_acces_id=last_carte_access.id)
                 add_instance(membre_sql)
                 for membresq in select_table(Membres):
-                     st.dataframe(membresq)
+                    st.dataframe(membresq)
                 st.title("Phase Search")
                 st.dataframe(search_card_id(str(unique_id)))
+                st.write(search_card_id(str(unique_id)).id)
                 st.dataframe(search_users_card(str(unique_id)))
             else:
                 st.error("Veuillez remplir tous les champs.")
@@ -207,24 +211,29 @@ def start_member():
             connect_user()
     else:
         create_user()
-def search_card_id(card_unique_id)-> int:
+
+
+def search_card_id(card_unique_id) -> int:
     with Session(engine) as session:
-        statement = select(CarteAcces).where(CarteAcces.numero_unique == card_unique_id)
+        statement = select(CarteAcces).where(
+            CarteAcces.numero_unique == card_unique_id)
         results = session.exec(statement)
         return results.first()
+
+
 def search_users_card(card_unique_id):
-    card_object = search_card_id(card_unique_id)
-    if card_object is None:
-        return []  # Si la carte n'existe pas, retourne une liste vide
-    id_card = card_object.id
+    card_object_id = search_card_id(card_unique_id).id
     with Session(engine) as session:
-        statement = select(Membres).where(Membres.carte_acces_id == id_card)
+        statement = select(Membres).where(
+            Membres.carte_acces_id == str(card_object_id))
         results = session.exec(statement)
-        return results.all()  # Récupérer tous les résultats de manière sûre
+        return results.first()  # Récupérer tous les résultats de manière sûre
 
 
-
-# TODO : Consulter Cours disponibles
-# TODO : S'inscrire à un cours (vérification des places restantes et des conflits d'horraires)
-# TODO : Annuler une inscription
-# TODO : Consulter l'historique des  inscriptions
+"""
+ TODO : Consulter Cours disponibles
+ TODO : S'inscrire à un cours (vérification des places restantes et des
+        conflits d'horraires)
+ TODO : Annuler une inscription
+ TODO : Consulter l'historique des  inscriptions
+"""

@@ -6,6 +6,8 @@ from init_db import engine
 import random as rd
 
 fake = Faker(locale="fr_FR")
+
+
 def populate_data():
     l_range = 15
     # Création Table Cartes d'Accès
@@ -17,16 +19,21 @@ def populate_data():
             cartes.append(carte)
         session.commit()
 
-    #création Table Membres
+    # création Table Membres
         membres = []
         for _ in range(l_range):
-            membre = Membres(nom = fake.name(),
-                             email = fake.email(),
-                             carte_acces_id= carte.id)
-            session.add(membre)
-            membres.append(membre)
-        session.commit()
-
+            for carte in cartes:
+                # carte = rd.choice(cartes)
+                name = fake.name()
+                membre = Membres(nom=name,
+                                 email=str(name.replace(" ", "")
+                                           + 'du'
+                                           + str(fake.random_int(1, 93))
+                                           + '@muscu.com'),
+                                 carte_acces_id=carte.numero_unique)
+                session.add(membre)
+                membres.append(membre)
+            session.commit()
     # Création Table Coachs
         coachs = []
         l_specialite = ["Yoga", "Pump", "Pilates", "Musculation", "Boxe"]
@@ -57,15 +64,17 @@ def populate_data():
         inscriptions = []
         for _ in range(l_range):
             inscription = Inscriptions(
-                membre_id = membre.id,
-                cours_id = single_cours.id,
-                date_inscription= datetime(fake.random_int(2015,2024),fake.random_int(1,12),fake.random_int(1,31),fake.random_int(1,24),fake.random_int(1,60))
+                membre_id=membre.id,
+                cours_id=single_cours.id,
+                date_inscription=datetime(fake.random_int(2015, 2024),
+                                          fake.random_int(1, 12),
+                                          fake.random_int(1, 31),
+                                          fake.random_int(1, 24),
+                                          fake.random_int(1, 60))
             )
             session.add(inscription)
             inscriptions.append(inscription)
         session.commit()
-
-
 
 
 if __name__ == "__main__":
