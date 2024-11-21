@@ -1,6 +1,7 @@
 import random
 import streamlit as st
-
+from models import Membres, CarteAcces
+from utils import add_instance
 
 class PathernMembre:
     def __init__(self, name: str, mail: str):
