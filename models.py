@@ -2,23 +2,24 @@ from sqlmodel import Field, SQLModel, create_engine, DateTime, Integer, String, 
 from datetime import datetime
 from typing import List, Optional
 
-#Définition des modèles
-#Table 1 : Coachs
+# Définition des modèles
+# Table 1 : Coachs
+
+
 class Coachs(SQLModel, table=True):
-    id: Optional[int] | None = Field(default=None, primary_key=True, unique=True)
+    id: Optional[int] = Field(default=None, primary_key=True, unique=True)
     nom: str
     specialite: str
-    cours : List["Cours"] = Relationship(back_populates="coachs")
+    cours: list["Cours"] = Relationship(back_populates="coachs")
 
-# Table 2 : Cours
+
 class Cours(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True, unique=True)
+    id: Optional[int] = Field(default=None, primary_key=True, unique=True)
     nom: str
     horaire: datetime
     capacite_max: int
-    coach_id: Optional[int] = Field(default=None, foreign_key="coachs.id") # optional  1.creer cours 2. creer coach
-
-    coachs : Coachs | None = Relationship(back_populates="cours")
+    coach_id: Optional[int] = Field(default=None, foreign_key="coachs.id")
+    coachs: Optional[Coachs] = Relationship(back_populates="cours")
     inscriptions: list["Inscriptions"] = Relationship(back_populates="cours")
 
 # Table 3 : Cartes d'accès

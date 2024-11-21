@@ -21,19 +21,18 @@ def populate_data():
 
     # création Table Membres
         membres = []
-        for _ in range(l_range):
-            for carte in cartes:
-                # carte = rd.choice(cartes)
-                name = fake.name()
-                membre = Membres(nom=name,
-                                 email=str(name.replace(" ", "")
-                                           + 'du'
-                                           + str(fake.random_int(1, 93))
-                                           + '@muscu.com'),
-                                 carte_acces_id=carte.numero_unique)
-                session.add(membre)
-                membres.append(membre)
-            session.commit()
+        for carte in cartes:
+            # carte = rd.choice(cartes)
+            name = fake.name()
+            membre = Membres(nom=name,
+                             email=str(name.replace(" ", "")
+                                       + 'du'
+                                       + str(fake.random_int(1, 93))
+                                       + '@muscu.com'),
+                             carte_acces_id=carte.numero_unique)
+            session.add(membre)
+            membres.append(membre)
+        session.commit()
     # Création Table Coachs
         coachs = []
         l_specialite = ["Yoga", "Pump", "Pilates", "Musculation", "Boxe"]
