@@ -1,7 +1,7 @@
 import random
 import streamlit as st
 from models import Membres, CarteAcces
-from utils import add_instance
+from utils import add_instance, select_table, get_last_instance, del_instance
 
 class PathernMembre:
     def __init__(self, name: str, mail: str):
@@ -99,6 +99,16 @@ def create_user():
                     f"Inscription réussie ! Voici votre numéro de carte : \
                         {unique_id}"
                     )
+                st.write("Step Add User and Carte Access")
+                carte_access_sql = CarteAcces(numero_unique=str(unique_id))
+                add_instance(carte_access_sql)
+                last_carte_access = get_last_instance(CarteAcces)
+                st.write(last_carte_access)
+                del_instance(CarteAcces,last_carte_access.id)
+                # membre_sql = Membres(nom=membre.name, email=membre.name)
+                # add_instance(membre_sql)
+                # for membresq in select_table(Membres):
+                #     st.dataframe(membresq)
             else:
                 st.error("Veuillez remplir tous les champs.")
 

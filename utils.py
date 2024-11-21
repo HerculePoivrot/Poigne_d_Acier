@@ -27,6 +27,12 @@ def select_table(table_focus:object):
         statement = select(table_focus)
         results = sessionsql.exec(statement)
         return results.all()
+def get_last_instance(table_focus):
+    with Session(engine) as session:
+        statement = select(table_focus).order_by(table_focus.id.desc()).limit(1)
+        result = session.exec(statement).first()
+        return result
+
 
 
 if __name__ == "__main__":
