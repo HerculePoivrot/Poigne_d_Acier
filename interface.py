@@ -57,6 +57,7 @@ def interface_update_user():
         switch_interface("default")
     if st.button("Retour aux profils"):
         switch_interface("connect_member")
+    disconnect_user()
     panel_update_user()
 
 
