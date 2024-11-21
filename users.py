@@ -167,7 +167,6 @@ def panel_user():
         if session.state_connection is True:
             st.write(
                 f"Connecté en tant que : {session.membre_inscription.name}")
-            disconnect_user()
         else:
             connect_user()
 

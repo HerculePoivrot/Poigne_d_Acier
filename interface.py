@@ -1,6 +1,6 @@
 import streamlit as st
 
-from users import create_user, panel_user, panel_update_user
+from users import create_user, panel_user, panel_update_user, disconnect_user
 from admin_panel import admin_pannel
 
 
@@ -43,6 +43,7 @@ def interface_connection():
         if st.session_state.state_connection is True:
             if st.button("Edit User"):
                 switch_interface("panel_update_user")
+            disconnect_user()
     if st.button("Pas encore inscrit ? Inscrivez-vous"):
         switch_interface("register_member")
     if st.button("Retour à l'Accueil"):
