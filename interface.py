@@ -68,6 +68,8 @@ def interface_acceuil():
         switch_interface("member")
     if st.button("Espace Administrateur"):
         switch_interface("admin")
+    if st.button("Test Erreur Interface"):
+        switch_interface(None)
 
 
 # --- Gestion de l'interface principale ---
@@ -86,6 +88,10 @@ def interface():
                         }
     if focus  in interface_choice:
         interface_choice[focus]()
+    else:
+        st.error("Oups vous vous êtes perdu dans les lymbes")
+        if st.button("Retour à l'Accueil"):
+            switch_interface("default")
 
 
 if __name__ == "__main__":
