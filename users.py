@@ -1,6 +1,7 @@
 import random
 import streamlit as st
-from models import Membres, CarteAcces
+from models import Membres, CarteAcces, Cours, Inscriptions
+from datetime import datetime
 from utils import add_instance, select_table, get_last_instance
 from sqlmodel import select, Session
 from init_db import engine
@@ -228,6 +229,131 @@ def search_users_card(card_unique_id):
             Membres.carte_acces_id == str(card_object_id))
         results = session.exec(statement)
         return results.first()  # Récupérer tous les résultats de manière sûre
+
+
+def afficher_cours_disponibles():
+    """
+    Affiche les cours disponibles avec leur capacité et nombre d'inscriptions.
+    """
+    with Session(engine) as session:
+        statement = select(Cours)
+        cours_disponibles = session.exec(statement).all()
+
+        if cours_disponibles:
+            st.title("Cours Disponibles")
+            for cours in cours_disponibles:
+                # Calculer les inscriptions actuelles
+                inscriptions_count = len(session.exec(
+                    select(Inscriptions).where(
+                        Inscriptions.cours_id == cours.id)
+                ).all())  # Utilisez all() et len() pour compter les inscriptions
+
+                st.write(f"""
+                **Cours** : {cours.nom}
+                - Horaire : {cours.horaire.strftime('%Y-%m-%d %H:%M')}
+                - Capacité : {inscriptions_count}/{cours.capacite_max}
+                """)
+        else:
+            st.write("Aucun cours disponible.")
+
+
+def inscrire_a_un_cours(member_focus: Membres = None):
+    """
+    Permet à l'utilisateur connecté de s'inscrire à un cours.
+    """
+    session = st.session_state
+    if member_focus is None:
+        if "membre_inscription" not in session or not session.state_connection:
+            st.error("Vous devez être connecté pour vous inscrire à un cours.")
+            return
+    else:
+        session.membre_inscription = PathernMembre(name=member_focus.nom,
+                                                   mail=member_focus.email)
+
+    membre = session.membre_inscription
+
+    with Session(engine) as db_session:
+        # Afficher les cours disponibles
+        statement = select(Cours)
+        cours_disponibles = db_session.exec(statement).all()
+
+        if not cours_disponibles:
+            st.error("Aucun cours disponible.")
+            return
+
+        # Sélectionner un cours
+        cours_options = {
+            f"{cours.nom} - {cours.horaire.strftime('%Y-%m-%d %H:%M')}":
+                cours.id for cours in cours_disponibles}
+        choix_cours = st.selectbox("Choisissez un cours",
+                                   options=list(cours_options.keys()))
+
+        if st.button("S'inscrire"):
+            # Obtenir l'ID du cours sélectionné
+            cours_id = cours_options[choix_cours]
+
+            # Vérifier si le cours est complet
+            inscriptions_count = len(db_session.exec(
+                select(Inscriptions).where(Inscriptions.cours_id == cours_id)
+            ).all())  # Compter le nombre d'inscriptions
+
+            cours = db_session.get(Cours, cours_id)
+
+            if inscriptions_count >= cours.capacite_max:
+                st.error("Ce cours est complet. Impossible de s'inscrire.")
+                return
+
+            # Récupérer l'objet 'Membres' à partir de l'email du membre
+            membre_sql = db_session.exec(
+                select(Membres).where(Membres.email == membre.mail)  # Utilisez l'email pour identifier le membre
+            ).first()
+
+            if membre_sql:
+                # Vérifier si le membre est déjà inscrit
+                inscription_existante = db_session.exec(
+                    select(Inscriptions).where(
+                        (Inscriptions.membre_id == membre_sql.id) & (
+                            Inscriptions.cours_id == cours_id)
+                    )
+                ).first()
+
+                if inscription_existante:
+                    st.error("Vous êtes déjà inscrit à ce cours.")
+                    return
+
+                # Créer l'inscription
+                nouvelle_inscription = Inscriptions(
+                    membre_id=membre_sql.id,
+                    cours_id=cours_id,
+                    date_inscription=datetime.now()
+                )
+                db_session.add(nouvelle_inscription)
+                db_session.commit()
+                st.success(f"Inscription réussie au cours : {cours.nom}")
+
+
+def start_member_with_cours():
+    """
+    Ajoute la gestion des cours dans le tableau de bord utilisateur.
+    """
+    session = st.session_state
+
+    if "state_connection" not in session:
+        session.state_connection = False
+
+    st.title("Espace Membre et Cours")
+
+    if "carte_membre" in session and "membre_inscription" in session:
+        if session.state_connection:
+            st.write(
+                f"Connecté en tant que : {session.membre_inscription.name}")
+            st.divider()
+            afficher_cours_disponibles()
+            inscrire_a_un_cours()
+        else:
+            connect_user()
+    else:
+        create_user()
 
 
 """

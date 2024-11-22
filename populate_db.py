@@ -34,46 +34,46 @@ def populate_data():
             membres.append(membre)
         session.commit()
     # Création Table Coachs
-        coachs = []
-        l_specialite = ["Yoga", "Pump", "Pilates", "Musculation", "Boxe"]
-        for _ in range(l_range):
-            coach = Coachs(nom = fake.name_nonbinary(),
-                           specialite = rd.choice(l_specialite)
-                           #cours = single_cours.id
-                           )
-            session.add(coach)
-            coachs.append(coach)
-        session.commit
+    coachs = []
+    l_specialite = ["Yoga", "Pump", "Pilates", "Musculation", "Boxe"]
+    for _ in range(l_range):
+        coach = Coachs(nom=fake.name_nonbinary(), specialite=rd.choice(l_specialite))
+        session.add(coach)
+        coachs.append(coach)
+    session.commit()
 
     # Création Table Cours
-        cours = []
-        #horaire_base = datetime(2024,12,1,6)
-        for _ in range(l_range):
-            single_cours = Cours(
-                nom = coach.specialite,
-                horaire= datetime(2024,12,fake.random_int(1,31),fake.random_int(6,22)),
-                capacite_max= fake.random_int(10,30),
-                coach_id= coach.id
-            )
-            session.add(single_cours)
-            cours.append(single_cours)
-        session.commit()
+    cours = []
+    for coach in coachs:  # Vous devez parcourir chaque coach
+        single_cours = Cours(
+            nom=coach.specialite,  # Utilisez la spécialité du coach comme nom du cours
+            horaire=datetime(2024, 12, fake.random_int(1, 31), fake.random_int(6, 22)),
+            capacite_max=fake.random_int(10, 30),
+            coach_id=coach.id  # Assurez-vous que le coach_id est bien référencé
+        )
+        session.add(single_cours)
+        cours.append(single_cours)
+    session.commit()
+
 
     # Création Table Inscriptions
-        inscriptions = []
-        for _ in range(l_range):
-            inscription = Inscriptions(
-                membre_id=membre.id,
-                cours_id=single_cours.id,
-                date_inscription=datetime(fake.random_int(2015, 2024),
-                                          fake.random_int(1, 12),
-                                          fake.random_int(1, 31),
-                                          fake.random_int(1, 24),
-                                          fake.random_int(1, 60))
-            )
-            session.add(inscription)
-            inscriptions.append(inscription)
-        session.commit()
+    inscriptions = []
+    for membre in membres:  # Vous devez parcourir chaque membre
+        single_cours = rd.choice(cours)  # Sélectionner un cours aléatoire
+        inscription = Inscriptions(
+            membre_id=membre.id,
+            cours_id=single_cours.id,
+            date_inscription=datetime(
+                fake.random_int(2015, 2024),
+                fake.random_int(1, 12),
+                fake.random_int(1, 31),
+                fake.random_int(1, 24),
+                fake.random_int(1, 60),
+            ),
+        )
+        session.add(inscription)
+        inscriptions.append(inscription)
+    session.commit()
 
 
 if __name__ == "__main__":
