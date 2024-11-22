@@ -259,7 +259,8 @@ def afficher_cours_disponibles():
 
 def inscrire_a_un_cours(member_focus: Membres = None):
     """
-    Permet à l'utilisateur connecté de s'inscrire à un cours.
+    Permet à l'utilisateur connecté de s'inscrire à un cours avec vérification
+    des places disponibles et des conflits horaires.
     """
     session = st.session_state
     if member_focus is None:
@@ -291,24 +292,41 @@ def inscrire_a_un_cours(member_focus: Membres = None):
         if st.button("S'inscrire"):
             # Obtenir l'ID du cours sélectionné
             cours_id = cours_options[choix_cours]
+            cours_selectionne = db_session.get(Cours, cours_id)
 
             # Vérifier si le cours est complet
             inscriptions_count = len(db_session.exec(
                 select(Inscriptions).where(Inscriptions.cours_id == cours_id)
             ).all())  # Compter le nombre d'inscriptions
 
-            cours = db_session.get(Cours, cours_id)
-
-            if inscriptions_count >= cours.capacite_max:
+            if inscriptions_count >= cours_selectionne.capacite_max:
                 st.error("Ce cours est complet. Impossible de s'inscrire.")
                 return
 
             # Récupérer l'objet 'Membres' à partir de l'email du membre
             membre_sql = db_session.exec(
-                select(Membres).where(Membres.email == membre.mail)  # Utilisez l'email pour identifier le membre
+                select(Membres).where(Membres.email == membre.mail)
             ).first()
 
             if membre_sql:
+                # Vérifier les inscriptions existantes du membre
+                inscriptions_existantes = db_session.exec(
+                    select(Inscriptions, Cours).join(Cours).where(
+                        Inscriptions.membre_id == membre_sql.id
+                    )
+                ).all()
+
+                # Vérifier les conflits horaires
+                for inscription, cours_inscrit in inscriptions_existantes:
+                    if cours_inscrit.horaire == cours_selectionne.horaire:
+                        st.error(
+                            f"Conflit horaire détecté avec le cours : "
+                            f"{cours_inscrit.nom} à {
+                                cours_inscrit.horaire.strftime(
+                                    '%Y-%m-%d %H:%M')}."
+                        )
+                        return
+
                 # Vérifier si le membre est déjà inscrit
                 inscription_existante = db_session.exec(
                     select(Inscriptions).where(
@@ -329,7 +347,71 @@ def inscrire_a_un_cours(member_focus: Membres = None):
                 )
                 db_session.add(nouvelle_inscription)
                 db_session.commit()
-                st.success(f"Inscription réussie au cours : {cours.nom}")
+                st.success(
+                    f"Inscription réussie au cours : {cours_selectionne.nom}")
+
+
+def desinscrire_d_un_cours():
+    """
+    Permet à un utilisateur connecté de se désinscrire d'un cours
+    auquel il est inscrit.
+    """
+    session = st.session_state
+    if "membre_inscription" not in session or not session.state_connection:
+        st.error("Vous devez être connecté pour vous désinscrire d'un cours.")
+        return
+
+    membre = session.membre_inscription
+
+    with Session(engine) as db_session:
+        # Récupérer l'objet 'Membres' à partir de l'email du membre
+        membre_sql = db_session.exec(
+            select(Membres).where(Membres.email == membre.mail)
+        ).first()
+
+        if not membre_sql:
+            st.error("Utilisateur non trouvé dans la base de données.")
+            return
+
+        # Récupérer les inscriptions actuelles du membre
+        inscriptions_existantes = db_session.exec(
+            select(Inscriptions, Cours).join(Cours).where(
+                Inscriptions.membre_id == membre_sql.id
+            )
+        ).all()
+
+        if not inscriptions_existantes:
+            st.info("Vous n'êtes inscrit à aucun cours.")
+            return
+
+        # Afficher les cours auxquels l'utilisateur est inscrit
+        cours_options = {
+            f"{cours.nom} - {cours.horaire.strftime('%Y-%m-%d %H:%M')}":
+                (inscription.membre_id, inscription.cours_id)
+            for inscription, cours in inscriptions_existantes
+        }
+        choix_inscription = st.selectbox("Sélectionnez un cours à quitter",
+                                         options=list(cours_options.keys()))
+
+        if st.button("Se désinscrire"):
+            # Obtenir les clés primaires de l'inscription sélectionnée
+            membre_id, cours_id = cours_options[choix_inscription]
+
+            # Rechercher l'inscription à supprimer
+            inscription_a_supprimer = db_session.exec(
+                select(Inscriptions).where(
+                    (Inscriptions.membre_id == membre_id) &
+                    (Inscriptions.cours_id == cours_id)
+                )
+            ).first()
+
+            if inscription_a_supprimer:
+                db_session.delete(inscription_a_supprimer)
+                db_session.commit()
+                st.success("Vous avez été désinscrit du cours avec succès.")
+                st.rerun()
+            else:
+                st.error("Erreur lors de la désinscription.")
 
 
 def start_member_with_cours():
@@ -350,6 +432,8 @@ def start_member_with_cours():
             st.divider()
             afficher_cours_disponibles()
             inscrire_a_un_cours()
+            st.divider()
+            desinscrire_d_un_cours()  # Intégrer la désinscription ici
         else:
             connect_user()
     else:
