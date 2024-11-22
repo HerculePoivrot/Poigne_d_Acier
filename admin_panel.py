@@ -1,4 +1,5 @@
 from admin_session import ADMIN_ID, ADMIN_PASSWORD
+from app_admin import page_admin
 import streamlit as st
 
 
@@ -44,3 +45,5 @@ def admin_pannel():
                      deconnexion_button_{st.session_state.focus_interface}"):
             st.session_state.admin_authentified = False
             st.rerun()  # Recharge pour retourner au formulaire de connexion
+        page_admin()
+            

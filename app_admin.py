@@ -1,10 +1,11 @@
 import streamlit as st
 from faker import Faker
-from datetime import datetime
+from datetime import datetime, time
 from init_db import engine
 from sqlmodel import Session, select
 from models import Coachs, Cours, CarteAcces, Membres, Inscriptions
 from utils import del_instance, add_instance, select_table
+from users import inscrire_a_un_cours, desinscrire_d_un_cours
 import random as rd
 import pandas as pd
 
@@ -51,6 +52,97 @@ def afficher_message(type_message, contenu):
     else:
         st.info(contenu)
 
+def gestion_coachs(fake, l_specialite):
+    afficher_coachs()
+    left, middle, right = st.columns(3)
+    
+    if left.button('➕ Ajouter'):
+        add_instance(Coachs(nom = fake.name_nonbinary(),
+                        specialite = rd.choice(l_specialite)
+                        ))
+        left.markdown("Veuillez ajouter un coach")
+        st.rerun()
+
+    if middle.button('✏️ Modifier'):
+        left.markdown("Vous pouvez modifier les informations d'un coach")
+        st.rerun()
+        
+    if "show_delete" not in st.session_state:
+        st.session_state.show_delete = False
+
+    with right:
+        # Bouton pour afficher l'interface de suppression
+        if st.button('➖ Supprimer'):
+            st.session_state.show_delete = True
+
+        # Afficher le formulaire de suppression si l'état est activé
+        if st.session_state.show_delete:
+            with st.expander("🗑️ Supprimer un coach"):
+                with Session(engine) as session:
+                    coachs = session.exec(select(Coachs)).all()
+                    if coachs:
+                        nom_coach = st.selectbox(
+                            "Entrez le nom du coach à supprimer",
+                            [coach.nom for coach in coachs]
+                            )
+                        coach_to_del = session.exec(select(Coachs).where(Coachs.nom == nom_coach)).first()
+                    if st.button("Confirmer la suppression?"):
+                        session.delete(coach_to_del)
+                        session.commit()
+                        st.success(f"Le coach {nom_coach} a été supprimé")
+                        
+                        st.session_state.show_delete = False # Réinitialisation de l'état
+                        st.rerun()
+
+def ajouter_des_cours():
+    nom_cours = st.text_input(label="Nom du Cours:", key="name_cours_gestion_cours")
+    capacite_max_cours = st.number_input(label="Capacité Max", key="capacite_max_cours_gestion_cours")
+    # Saisie de la date
+    selected_date = st.date_input("Choisissez une date", value=datetime.today())
+    # Saisie de l'heure
+    selected_time = st.time_input("Choisissez une heure", value=time(12, 0))
+
+    # Combiner la date et l'heure
+    date_cours = datetime.combine(selected_date, selected_time)
+
+    st.write("Date et heure sélectionnées :", date_cours)
+
+    new_cours = Cours(nom=nom_cours, horaire=date_cours)
+    add_instance()
+def gestion_des_cours():
+    afficher_cours_disponibles()
+def lister_membres():
+    """
+    Retourne une liste d'objets Membres depuis la base de données.
+    """
+    with Session(engine) as session:
+        membres = session.exec(select(Membres)).all()  # Liste d'objets Membres
+        return membres
+def gestion_membre_inscription():
+    # Récupère la liste des membres
+    liste_membres = lister_membres()  # Appel à la fonction
+    
+    # Crée une liste de noms des membres (avec ID pour plus de clarté)
+    options = [f"{membre.id} - {membre.nom}" for membre in liste_membres]
+
+    # Utilise un selectbox pour choisir un membre
+    selected_option = st.selectbox(label="Sélectionnez un Membre", options=options)
+
+    # Extraire l'ID du membre sélectionné
+    selected_id = int(selected_option.split(" - ")[0])  # Récupère l'ID en convertissant la partie avant " - "
+    
+    # Récupère l'objet membre correspondant
+    membre_selectionne = next((membre for membre in liste_membres if membre.id == selected_id), None)
+    
+    if membre_selectionne:
+        st.write(f"Vous avez sélectionné : {membre_selectionne.nom} (Email : {membre_selectionne.email})")
+        
+        # Appeler les fonctions pour inscrire/désinscrire
+        inscrire_a_un_cours(membre_selectionne)
+        desinscrire_d_un_cours(membre_selectionne)
+    else:
+        st.error("Erreur : membre introuvable.")
+
 def page_admin():
     fake = Faker(locale="fr_FR")
 
@@ -65,39 +157,11 @@ def page_admin():
     st.sidebar.title("Menu")
     page = st.sidebar.radio("Choisissez une section", ("Gestion des Coachs", "Gestion des Cours", "Gestion des Inscriptions"))
     if page == "Gestion des Coachs":
-        afficher_coachs()
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button('Ajouter'):
-                add_instance(Coachs(nom = fake.name_nonbinary(),
-                            specialite = rd.choice(l_specialite)
-                            ))
-                st.rerun()
-        with col2:
-            button2 = st.button('Modifier')
-        with col3:
-            if st.button('Supprimer'):
-                with st.expander("🗑️ Supprimer un coach"):
-                    with Session(engine) as session:
-                        coachs = session.exec(select(Coachs)).all()
-                        if coachs:
-                            nom_coach = st.text_input("Entrez le nom du coach à supprimer")
-                            if st.button("Supprimer le coach"):
-                                coach_a_supprimer = next((coach for coach in coachs if coach.nom.lower() == nom_coach.lower()), None)
-                                if coach_a_supprimer:
-                                    session.delete(coach_a_supprimer)
-                                    session.commit()
-                                    afficher_message("success", f"Le coach {nom_coach} a été supprimé avec succès.")
-                                    st.experimental_rerun()  # Recharge la page
-                                else:
-                                    afficher_message("error", f"Aucun coach trouvé avec le nom {nom_coach}.")
-                        else:
-                            st.warning("Aucun coach à supprimer.")
-
-
-    elif page == "Gestion des cours":
-        st.text('tada')
-    elif page == "Gestion des inscriptions":
+        gestion_coachs(fake, l_specialite)
+    elif page == "Gestion des Cours":
+        st.title("Gestion des Cours")
+        gestion_des_cours()
+    elif page == "Gestion des Inscriptions":
         st.header("Gestion des inscriptions 📝")
 
         with Session(engine) as session:
@@ -115,6 +179,7 @@ def page_admin():
                 )
             else:
                 st.warning("Aucune inscription enregistrée.")
+        gestion_membre_inscription()
 
 
 

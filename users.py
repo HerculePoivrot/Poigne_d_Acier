@@ -347,19 +347,24 @@ def inscrire_a_un_cours(member_focus: Membres = None):
                 )
                 db_session.add(nouvelle_inscription)
                 db_session.commit()
-                st.success(
-                    f"Inscription réussie au cours : {cours_selectionne.nom}")
+                st.success(f"Inscription réussie au cours : {cours_selectionne.nom}")
+                if member_focus is not None:
+                    st.rerun()
 
 
-def desinscrire_d_un_cours():
+def desinscrire_d_un_cours(member_focus: Membres = None):
     """
     Permet à un utilisateur connecté de se désinscrire d'un cours
     auquel il est inscrit.
     """
     session = st.session_state
-    if "membre_inscription" not in session or not session.state_connection:
-        st.error("Vous devez être connecté pour vous désinscrire d'un cours.")
-        return
+    if member_focus is None:
+        if "membre_inscription" not in session or not session.state_connection:
+            st.error("Vous devez être connecté pour vous désinscrire d'un cours.")
+            return
+    else:
+        session.membre_inscription = PathernMembre(name=member_focus.nom,
+                                                   mail=member_focus.email)        
 
     membre = session.membre_inscription
 
@@ -404,7 +409,6 @@ def desinscrire_d_un_cours():
                     (Inscriptions.cours_id == cours_id)
                 )
             ).first()
-
             if inscription_a_supprimer:
                 db_session.delete(inscription_a_supprimer)
                 db_session.commit()
