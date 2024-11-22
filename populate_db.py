@@ -55,7 +55,6 @@ def populate_data():
         cours.append(single_cours)
     session.commit()
 
-
     # Création Table Inscriptions
     inscriptions = []
     for membre in membres:  # Vous devez parcourir chaque membre
