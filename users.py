@@ -441,9 +441,5 @@ def start_member_with_cours():
 
 
 """
- TODO : Consulter Cours disponibles
- TODO : S'inscrire à un cours (vérification des places restantes et des
-        conflits d'horraires)
- TODO : Annuler une inscription
  TODO : Consulter l'historique des  inscriptions
 """
